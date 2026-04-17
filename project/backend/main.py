@@ -74,7 +74,7 @@ def add_production(prod: Production):
 
 @app.get("/dashboard-stats")
 def get_stats():
-    conn = get_db()  # <--- YOU NEED THIS LINE
+    conn = get_db()  
     if conn is None:
         raise HTTPException(status_code=500, detail="Database connection failed")
         
