@@ -67,6 +67,11 @@
               <input type="number" id="p-qty" placeholder="e.g. 750" min="0" required>
             </div>
           </div>
+          <div class="form-group">
+            <label for="p-crop">Crop Name</label>
+            <input type="text" id="p-crop" placeholder="e.g. Rice, Wheat" required>
+            <small id="price-display" style="color: #6a994e; font-weight: 600; display: block; margin-top: 5px;"></small>
+          </div>
 
           <div class="bonus-hint">
             <div class="bonus-hint-title">Bonus eligibility</div>
@@ -86,6 +91,21 @@
 
 <script src="script.js"></script>
 <script>
+  document.getElementById('p-crop').addEventListener('blur', async function() {
+    const crop = this.value.trim();
+    const display = document.getElementById('price-display');
+    
+    if (crop.length > 2) {
+        display.textContent = "Fetching live market price...";
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/get-price/${crop}`);
+            const data = await response.json();
+            display.textContent = `Current Market Price: ₹${data.price.toFixed(2)} / kg`;
+        } catch (error) {
+            display.textContent = "Could not fetch price. Using default (₹40/kg).";
+        }
+    }
+});
   document.getElementById('submitBtn').addEventListener('click', async function () {
     const farmer = document.getElementById('p-farmer').value.trim();
     const crop = document.getElementById('p-crop').value.trim();

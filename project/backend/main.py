@@ -117,6 +117,10 @@ def get_stats():
         "total_bonus": total_bonus,
         "total_revenue": total_revenue
     }
+@app.get("/get-price/{crop_name}")
+def fetch_price(crop_name: str):
+    price = get_market_price(crop_name)
+    return {"price": price}
 
 @app.get("/records")
 def get_records():
