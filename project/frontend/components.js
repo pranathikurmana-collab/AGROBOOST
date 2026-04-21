@@ -17,20 +17,22 @@ const sidebarHTML = `
         <span class="nav-label" style="margin-top:.75rem">Records</span>
         <a href="records.html" class="nav-item">Production Records</a>
     </nav>
+    <div class="sidebar-footer"><p>AgroBoost v2.0 · 2026</p></div>
 </aside>
 `;
 
-// Function to load the sidebar into the page
 function loadSidebar() {
     const appContainer = document.querySelector('.app');
     if (appContainer) {
-        // This puts the sidebar at the very beginning of the .app div
+        // Remove any manual sidebars that might have been left behind
+        const existingSidebar = appContainer.querySelector('aside.sidebar');
+        if (existingSidebar) existingSidebar.remove();
+
         appContainer.insertAdjacentHTML('afterbegin', sidebarHTML);
         
-        // Highlight the active link based on current URL
-        const currentPage = window.location.pathname.split("/").pop();
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
+        // Auto-highlight active link
+        const currentPage = window.location.pathname.split("/").pop() || "index.html";
+        document.querySelectorAll('.nav-item').forEach(item => {
             if (item.getAttribute('href') === currentPage) {
                 item.classList.add('active');
             }
@@ -38,5 +40,4 @@ function loadSidebar() {
     }
 }
 
-// Automatically run this when the script loads
 document.addEventListener('DOMContentLoaded', loadSidebar);

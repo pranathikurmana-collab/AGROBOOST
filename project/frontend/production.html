@@ -1,128 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgroBoost – Add Production</title>
-<link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>AgroBoost – Add Production</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<div class="app">
+    <div class="app">
+        <main class="main">
+            <div class="topbar"><span class="page-title">Add Production</span></div>
+            <div class="content">
+                <div class="panel">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Farmer Name</label>
+                            <input type="text" id="p-farmer" placeholder="Enter farmer name">
+                        </div>
+                        <div class="form-group">
+                            <label>Crop Name</label>
+                            <input type="text" id="p-crop" placeholder="e.g. Rice, Wheat">
+                            <small id="price-display"></small>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity (kg)</label>
+                            <input type="number" id="p-qty" placeholder="e.g. 750">
+                        </div>
+                    </div>
+                    <button class="submit-btn" id="submitBtn">Submit Production</button>
+                    <div class="success-msg" id="success-msg" style="display:none;">Added!</div>
+                </div>
+            </div>
+        </main>
+    </div>
     <script src="components.js"></script>
-      <h1>AgroBoost</h1>
-      <p>Harvest meets opportunity</p>
-    </div>
-    <nav class="nav">
-      <span class="nav-label">Menu</span>
-      <a href="index.html" class="nav-item">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-        Dashboard
-      </a>
-      <a href="add_farmer.html" class="nav-item">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V8H4v2H2v2h2v2h2v-2h2v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        Add Farmer
-      </a>
-      <a href="production.html" class="nav-item active">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
-        Add Production
-      </a>
-      <span class="nav-label" style="margin-top:.75rem">Records</span>
-      <a href="records.html" class="nav-item">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-        Production Records
-      </a>
-    </nav>
-    <div class="sidebar-footer"><p>AgroBoost v2.0 · 2025</p></div>
-  </aside>
+    <script>
+        document.getElementById('p-crop').addEventListener('blur', async function() {
+            const crop = this.value.trim();
+            if (crop.length > 2) {
+                const res = await fetch(`http://127.0.0.1:8000/get-price/${crop}`);
+                const data = await res.json();
+                document.getElementById('price-display').textContent = `Live Price: ₹${data.price}/kg`;
+            }
+        });
 
-  <main class="main">
-    <div class="topbar">
-      <span class="page-title">Add Production</span>
-    </div>
-
-    <div class="content">
-      <div class="form-page">
-        <div class="section-hdr"><h2>Log crop production</h2></div>
-        <div class="panel">
-          <div class="form-grid">
-            <div class="form-group full">
-              <label for="p-farmer">Farmer Name</label>
-              <input type="text" id="p-farmer" placeholder="Enter farmer name" required>
-            </div>
-            <div class="form-group">
-              <label for="p-crop">Crop Name</label>
-              <input type="text" id="p-crop" placeholder="e.g. Rice, Wheat" required>
-              <small id="price-display" style="color: #6a994e; font-weight: 600; display: block; margin-top: 5px;"></small>
-            </div>
-            <div class="form-group">
-              <label for="p-qty">Quantity (kg)</label>
-              <input type="number" id="p-qty" placeholder="e.g. 750" min="0" required>
-            </div>
-          </div>
-
-          <div class="bonus-hint">
-            <div class="bonus-hint-title">Bonus eligibility</div>
-            <div class="bonus-hint-body">≥ 1001 kg → <strong>₹5,000</strong> &nbsp;|&nbsp; 500–1000 kg → <strong>₹2,000</strong> &nbsp;|&nbsp; Below 500 kg → <strong>₹1000</strong></div>
-          </div>
-
-          <button class="submit-btn" id="submitBtn">Submit Production</button>
-          <div class="success-msg" id="success-msg">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#3B6D11"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L21 8l-9 9z"/></svg>
-            Production record added!
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<script>
-  // Live Price Fetching
-  document.getElementById('p-crop').addEventListener('blur', async function() {
-    const crop = this.value.trim();
-    const display = document.getElementById('price-display');
-    
-    if (crop.length > 2) {
-        display.textContent = "Fetching live market price...";
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/get-price/${crop}`);
-            const data = await response.json();
-            display.textContent = `Current Market Price: ₹${data.price.toFixed(2)} / kg`;
-        } catch (error) {
-            display.textContent = "Could not fetch price. Using default (₹40/kg).";
-        }
-    }
-  });
-
-  // Submit Logic
-  document.getElementById('submitBtn').addEventListener('click', async function () {
-    const farmer = document.getElementById('p-farmer').value.trim();
-    const crop = document.getElementById('p-crop').value.trim();
-    const quantity = parseInt(document.getElementById('p-qty').value);
-
-    if (!farmer || !crop || isNaN(quantity) || quantity <= 0) {
-        alert('Please fill all fields correctly.'); return;
-    }
-
-    const response = await fetch('http://127.0.0.1:8000/productions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ farmer, crop, quantity })
-    });
-
-    if (response.ok) {
-        document.getElementById('p-farmer').value = '';
-        document.getElementById('p-crop').value = '';
-        document.getElementById('p-qty').value = '';
-        document.getElementById('price-display').textContent = '';
-        const msg = document.getElementById('success-msg');
-        msg.style.display = 'flex';
-        setTimeout(() => msg.style.display = 'none', 3000);
-    }
-  });
-</script>
-
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const farmer = document.getElementById('p-farmer').value;
+            const crop = document.getElementById('p-crop').value;
+            const quantity = document.getElementById('p-qty').value;
+            const res = await fetch('http://127.0.0.1:8000/productions', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ farmer, crop, quantity })
+            });
+            if (res.ok) location.reload();
+        });
+    </script>
 </body>
 </html>
