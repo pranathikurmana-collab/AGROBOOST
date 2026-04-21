@@ -155,6 +155,18 @@ def add_production(prod: ProductionCreate):
     db.close()
     return {"status": "success", "price_used": current_market_price}
 
+@app.delete("/records/{record_id}")
+def delete_record(record_id: int):
+    db = SessionLocal()
+    record = db.query(ProductionDB).filter(ProductionDB.id == record_id).first()
+    if record:
+        db.delete(record)
+        db.commit()
+        db.close()
+        return {"status": "success", "message": f"Record {record_id} deleted"}
+    db.close()
+    return {"status": "error", "message": "Record not found"}, 404
+
 @app.delete("/clear-records")
 def clear_records():
     db = SessionLocal()

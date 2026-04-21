@@ -486,7 +486,23 @@ tr:hover td { background: #fafaf8; }
   letter-spacing: .02em;
   transition: all .15s;
 }
+.delete-row-btn {
+    background: #fff0f0;
+    color: #e74c3c;
+    border: 1px solid #ffcccc;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.delete-row-btn:hover {
+    background: #e74c3c;
+    color: white;
+}
 .submit-btn:hover { background: var(--green-900); }
 .submit-btn:active { transform: scale(.99); }
 

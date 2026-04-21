@@ -71,36 +71,65 @@
   </main>
 </div>
 
+<thead>
+  <tr>
+    <th>#</th>
+    <th>Farmer Name</th>
+    <th>Crop</th>
+    <th>Quantity (kg)</th>
+    <th>Bonus</th>
+    <th>Action</th> </tr>
+</thead>
+
 <script src="script.js"></script>
 <script>
+  // PASTE THE NEW CODE HERE
   async function renderTable() {
-    const response = await fetch('http://127.0.0.1:8000/records');
-    const productions = await response.json();
-    const tbody = document.getElementById('records-table');
-    tbody.innerHTML = '';
+      const response = await fetch('http://127.0.0.1:8000/records');
+      const productions = await response.json();
+      const tbody = document.getElementById('records-table');
+      tbody.innerHTML = '';
 
-    productions.forEach((p, i) => {
-        const row = tbody.insertRow();
-        row.innerHTML = `
-            <td style="color:#888780;font-size:.8rem">${i + 1}</td>
-            <td style="font-weight:500">${p.farmer}</td>
-            <td><span class="crop-pill">${p.crop}</span></td>
-            <td>${p.quantity.toLocaleString()} kg</td>
-            <td>${p.bonus > 0 ? `<span class="bonus-chip">₹${p.bonus.toLocaleString()}</span>` : '<span class="no-bonus">—</span>'}</td>
-        `;
-    });
-}
-renderTable();
-  
+      productions.forEach((p, i) => {
+          const row = tbody.insertRow();
+          row.innerHTML = `
+              <td style="color:#888780;font-size:.8rem">${i + 1}</td>
+              <td style="font-weight:500">${p.farmer}</td>
+              <td><span class="crop-pill">${p.crop}</span></td>
+              <td>${p.quantity.toLocaleString()} kg</td>
+              <td>${p.bonus > 0 ? `<span class="bonus-chip">₹${p.bonus.toLocaleString()}</span>` : '<span class="no-bonus">—</span>'}</td>
+              <td>
+                  <button class="delete-row-btn" onclick="deleteEntry(${p.id})">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                  </button>
+              </td>
+          `;
+      });
+  }
 
-  document.getElementById('clearBtn').addEventListener('click', function () {
-    if (confirm('Clear all production records? This cannot be undone.')) {
-      localStorage.removeItem('agroboost_productions');
+  async function deleteEntry(id) {
+      if (confirm('Are you sure you want to delete this record?')) {
+          const response = await fetch(`http://127.0.0.1:8000/records/${id}`, {
+              method: 'DELETE'
+          });
+          if (response.ok) {
+              renderTable(); 
+          } else {
+              alert("Failed to delete record.");
+          }
+      }
+  }
+
+  // Initial call to load the data when page opens
+  renderTable();
+
+  // Your existing clearBtn listener can stay here too
+  document.getElementById('clearBtn').addEventListener('click', async function () {
+    if (confirm('Clear all production records?')) {
+      await fetch('http://127.0.0.1:8000/clear-records', { method: 'DELETE' });
       renderTable();
     }
   });
-
-  renderTable();
 </script>
 
 </body>
