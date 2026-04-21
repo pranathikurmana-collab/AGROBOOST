@@ -490,8 +490,8 @@ tr:hover td { background: #fafaf8; }
     background: #fff0f0;
     color: #e74c3c;
     border: 1px solid #ffcccc;
-    padding: 6px;
-    border-radius: 6px;
+    padding: 8px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;

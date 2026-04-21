@@ -26,20 +26,28 @@
     </div>
     <script src="components.js"></script>
     <script>
-        async function renderTable() {
-            const res = await fetch('http://127.0.0.1:8000/records');
-            const data = await res.json();
-            const tbody = document.getElementById('records-table');
-            tbody.innerHTML = data.map((p, i) => `
-                <tr>
-                    <td>${i+1}</td>
-                    <td>${p.farmer}</td>
-                    <td>${p.crop}</td>
-                    <td>${p.quantity} kg</td>
-                    <td>₹${p.bonus}</td>
-                    <td><button onclick="deleteEntry(${p.id})">Delete</button></td>
-                </tr>`).join('');
-        }
+    async function renderTable() {
+    const res = await fetch('http://127.0.0.1:8000/records');
+    const data = await res.json();
+    const tbody = document.getElementById('records-table');
+    
+    tbody.innerHTML = data.map((p, i) => `
+        <tr>
+            <td style="color:#888780;font-size:.8rem">${i + 1}</td>
+            <td style="font-weight:500">${p.farmer}</td>
+            <td><span class="crop-pill">${p.crop}</span></td>
+            <td>${p.quantity.toLocaleString()} kg</td>
+            <td><span class="bonus-chip">₹${p.bonus.toLocaleString()}</span></td>
+            <td>
+                <button class="delete-row-btn" onclick="deleteEntry(${p.id})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </td>
+        </tr>`).join('');
+}
         async function deleteEntry(id) {
             if(confirm('Delete?')) {
                 await fetch(`http://127.0.0.1:8000/records/${id}`, {method:'DELETE'});
