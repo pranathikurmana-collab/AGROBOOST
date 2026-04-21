@@ -4,11 +4,28 @@ from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Float, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import requests
+
+# --- GOVT API LOGIC ---
+def get_market_price(commodity: str):
+    # REPLACE THIS with your key from data.gov.in
+    API_KEY = "579b464db66ec23bdd00000115f7591d366241ce716b47198b87d19f" 
+    url = f"https://api.data.gov.in/resource/9ef542fd-9a8d-4d86-b006-7c376a053e43?api-key={API_KEY}&format=json&filters[commodity]={commodity}&filters[state]=Telangana"
+    
+    try:
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        if data.get('records'):
+            # Modal price is usually per Quintal (100kg), converting to per kg
+            return float(data['records'][0]['modal_price']) / 100
+    except Exception as e:
+        print(f"API Error: {e}")
+    
+    return 40.0  # Fallback price per kg if API fails or crop not found
 
 # --- MySQL Connection Setup ---
-# Format: mysql+pymysql://USER:PASSWORD@HOST:PORT/DATABASE_NAME
 USER = "root"
-PASSWORD = ""  # Enter your MySQL password
+PASSWORD = ""  # Your XAMPP password (usually empty)
 HOST = "localhost"
 PORT = "3306"
 DB_NAME = "agroboost_db1"
@@ -33,9 +50,11 @@ class ProductionDB(Base):
     farmer = Column(String(100))
     crop = Column(String(50))
     quantity = Column(Integer)
+    market_price = Column(Float) # New: Price per kg from API
+    market_value = Column(Float) # New: Qty * Price
     bonus = Column(Float)
 
-# Create tables in MySQL
+# Create/Update tables
 Base.metadata.create_all(bind=engine)
 
 # --- FastAPI App ---
@@ -72,13 +91,18 @@ def get_stats():
     db = SessionLocal()
     total_farmers = db.query(FarmerDB).count()
     productions = db.query(ProductionDB).all()
+    
     total_qty = sum(p.quantity for p in productions)
     total_bonus = sum(p.bonus for p in productions)
+    # New: Total value including market price
+    total_revenue = sum((p.market_value or 0) + p.bonus for p in productions)
+    
     db.close()
     return {
         "total_farmers": total_farmers,
         "total_qty": total_qty,
-        "total_bonus": total_bonus
+        "total_bonus": total_bonus,
+        "total_revenue": total_revenue
     }
 
 @app.get("/records")
@@ -100,17 +124,31 @@ def add_farmer(farmer: FarmerCreate):
 @app.post("/productions")
 def add_production(prod: ProductionCreate):
     db = SessionLocal()
+    
+    # 1. Get real-time price from Govt API
+    current_price = get_market_price(prod.crop)
+    
+    # 2. Calculate values
     bonus_amt = calculate_bonus(prod.quantity)
+    mkt_value = prod.quantity * current_price
+    
+    # 3. Save to Database
     new_prod = ProductionDB(
         farmer=prod.farmer, 
         crop=prod.crop, 
-        quantity=prod.quantity, 
+        quantity=prod.quantity,
+        market_price=current_price,
+        market_value=mkt_value,
         bonus=bonus_amt
     )
     db.add(new_prod)
     db.commit()
     db.close()
-    return {"status": "success"}
+    return {
+        "status": "success", 
+        "fetched_price": current_price,
+        "total_earning": mkt_value + bonus_amt
+    }
 
 @app.delete("/clear-records")
 def clear_records():
