@@ -10,8 +10,6 @@
 <body>
 
 <div class="app">
-
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
       <div class="logo-icon">
@@ -43,7 +41,6 @@
     <div class="sidebar-footer"><p>AgroBoost v2.0 · 2025</p></div>
   </aside>
 
-  <!-- Main -->
   <main class="main">
     <div class="topbar">
       <span class="page-title">Add Production</span>
@@ -61,21 +58,17 @@
             <div class="form-group">
               <label for="p-crop">Crop Name</label>
               <input type="text" id="p-crop" placeholder="e.g. Rice, Wheat" required>
+              <small id="price-display" style="color: #6a994e; font-weight: 600; display: block; margin-top: 5px;"></small>
             </div>
             <div class="form-group">
               <label for="p-qty">Quantity (kg)</label>
               <input type="number" id="p-qty" placeholder="e.g. 750" min="0" required>
             </div>
           </div>
-          <div class="form-group">
-            <label for="p-crop">Crop Name</label>
-            <input type="text" id="p-crop" placeholder="e.g. Rice, Wheat" required>
-            <small id="price-display" style="color: #6a994e; font-weight: 600; display: block; margin-top: 5px;"></small>
-          </div>
 
           <div class="bonus-hint">
             <div class="bonus-hint-title">Bonus eligibility</div>
-            <div class="bonus-hint-body">≥ 1001 kg → <strong>₹5,000</strong> &nbsp;|&nbsp; 500–1000 kg → <strong>₹2,000</strong> &nbsp;|&nbsp; Below 500 kg → ₹1,000</div>
+            <div class="bonus-hint-body">≥ 1001 kg → <strong>₹5,000</strong> &nbsp;|&nbsp; 500–1000 kg → <strong>₹2,000</strong> &nbsp;|&nbsp; Below 500 kg → <strong>₹100</strong></div>
           </div>
 
           <button class="submit-btn" id="submitBtn">Submit Production</button>
@@ -89,8 +82,8 @@
   </main>
 </div>
 
-<script src="script.js"></script>
 <script>
+  // Live Price Fetching
   document.getElementById('p-crop').addEventListener('blur', async function() {
     const crop = this.value.trim();
     const display = document.getElementById('price-display');
@@ -105,7 +98,9 @@
             display.textContent = "Could not fetch price. Using default (₹40/kg).";
         }
     }
-});
+  });
+
+  // Submit Logic
   document.getElementById('submitBtn').addEventListener('click', async function () {
     const farmer = document.getElementById('p-farmer').value.trim();
     const crop = document.getElementById('p-crop').value.trim();
@@ -125,11 +120,12 @@
         document.getElementById('p-farmer').value = '';
         document.getElementById('p-crop').value = '';
         document.getElementById('p-qty').value = '';
+        document.getElementById('price-display').textContent = '';
         const msg = document.getElementById('success-msg');
         msg.style.display = 'flex';
         setTimeout(() => msg.style.display = 'none', 3000);
     }
-});
+  });
 </script>
 
 </body>
