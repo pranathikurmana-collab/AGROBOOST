@@ -1,13 +1,46 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
-import mysql.connector
-from mysql.connector import Error
+from sqlalchemy import Column, Integer, String, Float, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
+# --- MySQL Connection Setup ---
+# Format: mysql+pymysql://USER:PASSWORD@HOST:PORT/DATABASE_NAME
+USER = "root"
+PASSWORD = ""  # Enter your MySQL password
+HOST = "localhost"
+PORT = "3306"
+DB_NAME = "agroboost_db1"
+
+DATABASE_URL = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# --- Database Models ---
+class FarmerDB(Base):
+    __tablename__ = "farmers"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100))
+    village = Column(String(100))
+    phone = Column(String(20))
+
+class ProductionDB(Base):
+    __tablename__ = "productions"
+    id = Column(Integer, primary_key=True, index=True)
+    farmer = Column(String(100))
+    crop = Column(String(50))
+    quantity = Column(Integer)
+    bonus = Column(Float)
+
+# Create tables in MySQL
+Base.metadata.create_all(bind=engine)
+
+# --- FastAPI App ---
 app = FastAPI()
 
-# Enable CORS so your HTML files can talk to this API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,94 +48,78 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database Configuration
-db_config = {
-    "host": "192.168.1.6",
-    "user": "root",
-    "password": "stanley",
-    "database": "agroboost_db"
-}
-
-# --- Models ---
-class Farmer(BaseModel):
+# --- Pydantic Schemas ---
+class FarmerCreate(BaseModel):
     name: str
     village: str
     phone: str
 
-class Production(BaseModel):
+class ProductionCreate(BaseModel):
     farmer: str
     crop: str
     quantity: int
 
-# --- Helper function for DB connection ---
-def get_db():
-    try:
-        conn = mysql.connector.connect(**db_config)
-        return conn
-    except Error as e:
-        print(f"Error: {e}")
-        return None
+# --- Business Logic ---
+def calculate_bonus(qty: int) -> int:
+    if qty >= 1001: return 5000
+    if qty >= 500: return 2000
+    return 0
 
 # --- API Endpoints ---
 
-@app.post("/farmers")
-def add_farmer(farmer: Farmer):
-    conn = get_db()
-    cursor = conn.cursor()
-    query = "INSERT INTO farmers (name, village, phone) VALUES (%s, %s, %s)"
-    cursor.execute(query, (farmer.name, farmer.village, farmer.phone))
-    conn.commit()
-    conn.close()
-    return {"message": "Farmer registered successfully"}
-
-@app.post("/productions")
-def add_production(prod: Production):
-    # Calculate bonus based on your UI logic
-    bonus = 0
-    if prod.quantity > 1000:
-        bonus = 5000
-    elif prod.quantity >= 500:
-        bonus = 2000
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    query = "INSERT INTO productions (farmer_name, crop, quantity, bonus) VALUES (%s, %s, %s, %s)"
-    cursor.execute(query, (prod.farmer, prod.crop, prod.quantity, bonus))
-    conn.commit()
-    conn.close()
-    return {"message": "Production recorded", "bonus": bonus}
-
 @app.get("/dashboard-stats")
 def get_stats():
-    conn = get_db()  
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-        
-    try:
-        cursor = conn.cursor(dictionary=True)
-        # ... the rest of your select queries ...
-        
-        cursor.execute("SELECT COUNT(*) as total_farmers FROM farmers")
-        f_count = cursor.fetchone()['total_farmers']
-        
-        cursor.execute("SELECT SUM(quantity) as total_qty, SUM(bonus) as total_bonus FROM productions")
-        prod_data = cursor.fetchone()
-        
-        return {
-            "total_farmers": f_count,
-            "total_qty": prod_data['total_qty'] or 0,
-            "total_bonus": prod_data['total_bonus'] or 0
-        }
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {e}")
-    finally:
-        conn.close()
+    db = SessionLocal()
+    total_farmers = db.query(FarmerDB).count()
+    productions = db.query(ProductionDB).all()
+    total_qty = sum(p.quantity for p in productions)
+    total_bonus = sum(p.bonus for p in productions)
+    db.close()
+    return {
+        "total_farmers": total_farmers,
+        "total_qty": total_qty,
+        "total_bonus": total_bonus
+    }
 
 @app.get("/records")
 def get_records():
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT farmer_name as farmer, crop, quantity, bonus FROM productions ORDER BY id DESC")
-    results = cursor.fetchall()
-    conn.close()
-    return results
+    db = SessionLocal()
+    records = db.query(ProductionDB).order_by(ProductionDB.id.desc()).all()
+    db.close()
+    return records
+
+@app.post("/farmers")
+def add_farmer(farmer: FarmerCreate):
+    db = SessionLocal()
+    new_farmer = FarmerDB(name=farmer.name, village=farmer.village, phone=farmer.phone)
+    db.add(new_farmer)
+    db.commit()
+    db.close()
+    return {"status": "success"}
+
+@app.post("/productions")
+def add_production(prod: ProductionCreate):
+    db = SessionLocal()
+    bonus_amt = calculate_bonus(prod.quantity)
+    new_prod = ProductionDB(
+        farmer=prod.farmer, 
+        crop=prod.crop, 
+        quantity=prod.quantity, 
+        bonus=bonus_amt
+    )
+    db.add(new_prod)
+    db.commit()
+    db.close()
+    return {"status": "success"}
+
+@app.delete("/clear-records")
+def clear_records():
+    db = SessionLocal()
+    db.query(ProductionDB).delete()
+    db.commit()
+    db.close()
+    return {"status": "cleared"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
