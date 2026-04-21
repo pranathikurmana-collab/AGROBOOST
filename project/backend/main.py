@@ -8,24 +8,28 @@ import requests
 
 # --- GOVT API LOGIC ---
 def get_market_price(commodity: str):
-    # REPLACE THIS with your key from data.gov.in
+    # This is the API Key you generated from data.gov.in
     API_KEY = "579b464db66ec23bdd00000115f7591d366241ce716b47198b87d19f" 
+    
+    # We are filtering for Telangana to get local Mandi prices
     url = f"https://api.data.gov.in/resource/9ef542fd-9a8d-4d86-b006-7c376a053e43?api-key={API_KEY}&format=json&filters[commodity]={commodity}&filters[state]=Telangana"
     
     try:
         response = requests.get(url, timeout=5)
         data = response.json()
-        if data.get('records'):
-            # Modal price is usually per Quintal (100kg), converting to per kg
-            return float(data['records'][0]['modal_price']) / 100
+        if data.get('records') and len(data['records']) > 0:
+            # The API gives price per Quintal (100kg). We divide by 100 for price per kg.
+            modal_price = float(data['records'][0]['modal_price'])
+            return modal_price / 100
     except Exception as e:
-        print(f"API Error: {e}")
+        print(f"Connection to Govt API failed: {e}")
     
-    return 40.0  # Fallback price per kg if API fails or crop not found
+    # Fallback price if API is down or crop not found
+    return 40.0 
 
 # --- MySQL Connection Setup ---
 USER = "root"
-PASSWORD = ""  # Your XAMPP password (usually empty)
+PASSWORD = ""  # XAMPP default is empty. If you set a password, enter it here.
 HOST = "localhost"
 PORT = "3306"
 DB_NAME = "agroboost_db1"
@@ -50,16 +54,17 @@ class ProductionDB(Base):
     farmer = Column(String(100))
     crop = Column(String(50))
     quantity = Column(Integer)
-    market_price = Column(Float) # New: Price per kg from API
-    market_value = Column(Float) # New: Qty * Price
-    bonus = Column(Float)
+    market_price = Column(Float) # Fetched from API
+    market_value = Column(Float) # Qty * market_price
+    bonus = Column(Float)        # Based on your business logic
 
-# Create/Update tables
+# This creates the tables automatically if they don't exist
 Base.metadata.create_all(bind=engine)
 
-# --- FastAPI App ---
+# --- FastAPI Setup ---
 app = FastAPI()
 
+# Enable CORS for your HTML files
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -67,7 +72,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Pydantic Schemas ---
+# --- Pydantic Schemas (For data validation) ---
 class FarmerCreate(BaseModel):
     name: str
     village: str
@@ -86,6 +91,10 @@ def calculate_bonus(qty: int) -> int:
 
 # --- API Endpoints ---
 
+@app.get("/")
+def home():
+    return {"message": "AgroBoost API is running successfully!"}
+
 @app.get("/dashboard-stats")
 def get_stats():
     db = SessionLocal()
@@ -94,8 +103,8 @@ def get_stats():
     
     total_qty = sum(p.quantity for p in productions)
     total_bonus = sum(p.bonus for p in productions)
-    # New: Total value including market price
-    total_revenue = sum((p.market_value or 0) + p.bonus for p in productions)
+    # Total revenue = (Market Value of all crops) + (All bonuses awarded)
+    total_revenue = sum((p.market_value or 0) + (p.bonus or 0) for p in productions)
     
     db.close()
     return {
@@ -125,30 +134,26 @@ def add_farmer(farmer: FarmerCreate):
 def add_production(prod: ProductionCreate):
     db = SessionLocal()
     
-    # 1. Get real-time price from Govt API
-    current_price = get_market_price(prod.crop)
+    # 1. Fetch real-time price
+    current_market_price = get_market_price(prod.crop)
     
     # 2. Calculate values
     bonus_amt = calculate_bonus(prod.quantity)
-    mkt_value = prod.quantity * current_price
+    total_market_value = prod.quantity * current_market_price
     
     # 3. Save to Database
     new_prod = ProductionDB(
         farmer=prod.farmer, 
         crop=prod.crop, 
         quantity=prod.quantity,
-        market_price=current_price,
-        market_value=mkt_value,
+        market_price=current_market_price,
+        market_value=total_market_value,
         bonus=bonus_amt
     )
     db.add(new_prod)
     db.commit()
     db.close()
-    return {
-        "status": "success", 
-        "fetched_price": current_price,
-        "total_earning": mkt_value + bonus_amt
-    }
+    return {"status": "success", "price_used": current_market_price}
 
 @app.delete("/clear-records")
 def clear_records():
@@ -160,4 +165,5 @@ def clear_records():
 
 if __name__ == "__main__":
     import uvicorn
+    # Start the server on port 8000
     uvicorn.run(app, host="127.0.0.1", port=8000)
