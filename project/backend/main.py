@@ -12,7 +12,8 @@ def get_market_price(commodity: str):
     API_KEY = "579b464db66ec23bdd00000115f7591d366241ce716b47198b87d19f" 
     
     # We are filtering for Telangana to get local Mandi prices
-    url = f"https://api.data.gov.in/resource/9ef542fd-9a8d-4d86-b006-7c376a053e43?api-key={API_KEY}&format=json&filters[commodity]={commodity}&filters[state]=Telangana"
+   # Change the filters[commodity] part to this:
+    url = f"https://api.data.gov.in/resource/9ef542fd-9a8d-4d86-b006-7c376a053e43?api-key={API_KEY}&format=json&filters[state]=Telangana"
     
     try:
         response = requests.get(url, timeout=5)
