@@ -107,6 +107,7 @@
     document.getElementById('stat-farmers').textContent = stats.total_farmers;
     document.getElementById('stat-qty').textContent = stats.total_qty.toLocaleString() + ' kg';
     document.getElementById('stat-bonus').textContent = '₹' + stats.total_bonus.toLocaleString();
+    document.getElementById('stat-revenue').textContent = '₹' + stats.total_revenue.toLocaleString();
     
     // For the "Recent Records" table, we fetch the first 5 records
     const recResponse = await fetch('http://127.0.0.1:8000/records');
