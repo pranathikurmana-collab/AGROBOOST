@@ -91,7 +91,7 @@ def calculate_bonus(qty: int) -> int:
     if qty >= 500: 
         return 2000
     # Change this from 0 to 100
-    return 100
+    return 1000
 
 # --- API Endpoints ---
 
