@@ -84,10 +84,14 @@ class ProductionCreate(BaseModel):
     quantity: int
 
 # --- Business Logic ---
+# --- Updated Business Logic ---
 def calculate_bonus(qty: int) -> int:
-    if qty >= 1001: return 5000
-    if qty >= 500: return 2000
-    return 0
+    if qty >= 1001: 
+        return 5000
+    if qty >= 500: 
+        return 2000
+    # Change this from 0 to 100
+    return 100
 
 # --- API Endpoints ---
 
