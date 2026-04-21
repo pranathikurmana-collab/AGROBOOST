@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroBoost – Payments</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        .wallet-card {
+            background: linear-gradient(135deg, #386641 0%, #6a994e 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(106, 153, 78, 0.2);
+        }
+        .balance-label { font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px; }
+        .balance-amount { font-size: 2.5rem; font-weight: 800; font-family: 'Syne'; }
+        
+        .txn-history { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; }
+        .txn-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .txn-item:last-child { border-bottom: none; }
+        
+        .qr-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C8 16.81 12 14 19 13L17 8Z"/><path d="M20.53 2C18.84 8 14.67 11.06 7 12L8.73 17C12.56 15.36 15.07 12.62 17 8L20.53 2Z"/></svg></div>
+            <h1>AgroBoost</h1>
+        </div>
+        <nav class="nav">
+            <a href="index.html" class="nav-item">Dashboard</a>
+            <a href="add_farmer.html" class="nav-item">Add Farmer</a>
+            <a href="production.html" class="nav-item">Add Production</a>
+            <a href="logistics.html" class="nav-item">Logistics</a>
+            <a href="payments.html" class="nav-item active">Payments</a>
+            <a href="records.html" class="nav-item">Records</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar"><span class="page-title">Wallet & Payments</span></div>
+        <div class="content">
+            <div class="wallet-card">
+                <div class="balance-label">Total Earnings (Market Price + Bonuses)</div>
+                <div class="balance-amount">₹<span id="wallet-balance">24,500</span></div>
+                <button class="submit-btn" style="background: white; color: #386641; margin-top: 20px; border:none;" onclick="showQR()">Withdraw to Bank</button>
+            </div>
+
+            <div class="section-hdr"><h3>Recent Transactions</h3></div>
+            <div class="txn-history">
+                <div class="txn-item">
+                    <div>
+                        <div style="font-weight:600">Paddy Sale Payout</div>
+                        <small style="color:#888">Order #AB-9921 · 21 Apr 2026</small>
+                    </div>
+                    <div style="color:#6a994e; font-weight:700">+ ₹17,750</div>
+                </div>
+                <div class="txn-item">
+                    <div>
+                        <div style="font-weight:600">State Productivity Bonus</div>
+                        <small style="color:#888">700kg Tier · 21 Apr 2026</small>
+                    </div>
+                    <div style="color:#6a994e; font-weight:700">+ ₹2,000</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="qrModal" class="qr-modal">
+    <div class="modal-content">
+        <h3>Withdraw Funds</h3>
+        <p style="font-size: 0.8rem; color:#666">Scan to verify UPI ID</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=AgroBoostPayment" alt="QR Code" style="margin:20px 0">
+        <p style="font-weight:bold; color:#6a994e">₹24,500.00</p>
+        <button class="submit-btn" onclick="hideQR()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function showQR() { document.getElementById('qrModal').style.display = 'flex'; }
+    function hideQR() { document.getElementById('qrModal').style.display = 'none'; }
+</script>
+
+</body>
+</html>

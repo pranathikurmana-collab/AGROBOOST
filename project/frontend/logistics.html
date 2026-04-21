@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroBoost – Logistics</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Logistics Specific Styles */
+        .tracking-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            transition: transform 0.2s;
+        }
+        .tracking-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        
+        .track-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        .status-pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-transit { background: #e3f2fd; color: #1976d2; }
+        .status-pending { background: #fff8e1; color: #f57c00; }
+        
+        .progress-track {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 30px 0;
+        }
+        .progress-track::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: 0; right: 0;
+            height: 3px; background: #eee;
+            z-index: 1;
+        }
+        .step {
+            position: relative;
+            z-index: 2;
+            background: white;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 3px solid #eee;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; color: #999;
+        }
+        .step.active { border-color: #6a994e; color: #6a994e; background: #f2f8ee; }
+        
+        .driver-box {
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        .driver-img { width: 40px; height: 40px; background: #ddd; border-radius: 50%; margin-right: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C8 16.81 12 14 19 13L17 8Z"/><path d="M20.53 2C18.84 8 14.67 11.06 7 12L8.73 17C12.56 15.36 15.07 12.62 17 8L20.53 2Z"/></svg>
+            </div>
+            <h1>AgroBoost</h1>
+        </div>
+        <nav class="nav">
+            <a href="index.html" class="nav-item">Dashboard</a>
+            <a href="add_farmer.html" class="nav-item">Add Farmer</a>
+            <a href="production.html" class="nav-item">Add Production</a>
+            <a href="logistics.html" class="nav-item active">Logistics</a>
+            <a href="records.html" class="nav-item">Records</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar"><span class="page-title">Logistics & Tracking</span></div>
+        <div class="content">
+            <div class="section-hdr"><h2>Active Pickups</h2></div>
+            
+            <div class="tracking-card">
+                <div class="track-header">
+                    <div>
+                        <h3 style="margin:0">Order #AB-9921</h3>
+                        <small style="color:#888">Rice · 700 kg · Warangal Mandi</small>
+                    </div>
+                    <span class="status-pill status-transit">In Transit</span>
+                </div>
+
+                <div class="progress-track">
+                    <div class="step active">✓</div>
+                    <div class="step active">✓</div>
+                    <div class="step active">3</div>
+                    <div class="step">4</div>
+                </div>
+                <div style="display:flex; justify-content: space-between; font-size: 0.7rem; color: #666; margin-top: -20px;">
+                    <span>Booked</span>
+                    <span>Picked Up</span>
+                    <span style="color:#6a994e; font-weight:bold">Moving</span>
+                    <span>Delivered</span>
+                </div>
+
+                <div class="driver-box">
+                    <div class="driver-img"></div>
+                    <div style="flex:1">
+                        <div style="font-weight:600; font-size:0.9rem">Srinivas Rao</div>
+                        <div style="font-size:0.75rem; color:#888">TS 08 EA 1234 · Tata Ace</div>
+                    </div>
+                    <button class="status-pill" style="background:#6a994e; color:white; border:none; cursor:pointer">Call</button>
+                </div>
+            </div>
+
+            <button class="submit-btn" style="margin-top:20px">+ Request New Pickup</button>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

@@ -57,6 +57,9 @@ class ProductionDB(Base):
     market_price = Column(Float)
     market_value = Column(Float)
     bonus = Column(Float)
+    # NEW COLUMNS for Logistics and Payments
+    status = Column(String(50), default="Pending") # Pending, In Transit, Delivered
+    payment_status = Column(String(50), default="Unpaid") # Unpaid, Paid
 
 Base.metadata.create_all(bind=engine)
 
@@ -100,15 +103,20 @@ def get_stats():
     db = SessionLocal()
     total_farmers = db.query(FarmerDB).count()
     productions = db.query(ProductionDB).all()
+    
     total_qty = sum(p.quantity for p in productions)
-    total_bonus = sum(p.bonus for p in productions)
+    # Sum up everything the farmer is owed
     total_revenue = sum((p.market_value or 0) + (p.bonus or 0) for p in productions)
+    
+    # Count how many are currently being delivered
+    active_deliveries = db.query(ProductionDB).filter(ProductionDB.status == "In Transit").count()
+    
     db.close()
     return {
         "total_farmers": total_farmers,
         "total_qty": total_qty,
-        "total_bonus": total_bonus,
-        "total_revenue": total_revenue
+        "total_revenue": total_revenue,
+        "active_deliveries": active_deliveries
     }
 
 @app.get("/records")
@@ -151,6 +159,21 @@ def add_production(prod: ProductionCreate):
     db.commit()
     db.close()
     return {"status": "success", "price_used": current_market_price}
+@app.post("/process-payout/{farmer_name}")
+def process_payout(farmer_name: str):
+    db = SessionLocal()
+    # Find all unpaid records for this farmer and mark them paid
+    unpaid_records = db.query(ProductionDB).filter(
+        ProductionDB.farmer == farmer_name, 
+        ProductionDB.payment_status == "Unpaid"
+    ).all()
+    
+    for record in unpaid_records:
+        record.payment_status = "Paid"
+    
+    db.commit()
+    db.close()
+    return {"status": "success", "message": f"Payments processed for {farmer_name}"}
 
 @app.delete("/records/{record_id}")
 def delete_record(record_id: int):
