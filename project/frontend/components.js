@@ -17,38 +17,42 @@ const sidebarHTML = `
         <span class="nav-label" style="margin-top:.75rem">Records</span>
         <a href="records.html" class="nav-item">Production Records</a>
     </nav>
+    <div id="weather-box"></div>
     <div class="sidebar-footer"><p>AgroBoost v2.0 · 2026</p></div>
 </aside>
 `;
 
+async function fetchWeather() {
+    try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=17.38&longitude=78.48&current_weather=true');
+        const data = await res.json();
+        const weatherBox = document.getElementById('weather-box');
+        if (weatherBox) {
+            weatherBox.innerHTML = `
+                <div style="margin: 20px 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px; font-size: 0.8rem; color: white;">
+                    ☁️ Hyderabad: ${data.current_weather.temperature}°C<br>
+                    <span style="opacity: 0.7;">Clear sky - Ideal for harvest</span>
+                </div>`;
+        }
+    } catch (e) { console.error("Weather load failed"); }
+}
+
 function loadSidebar() {
     const appContainer = document.querySelector('.app');
     if (appContainer) {
-        // Remove any manual sidebars that might have been left behind
         const existingSidebar = appContainer.querySelector('aside.sidebar');
         if (existingSidebar) existingSidebar.remove();
 
         appContainer.insertAdjacentHTML('afterbegin', sidebarHTML);
         
-        // Auto-highlight active link
         const currentPage = window.location.pathname.split("/").pop() || "index.html";
         document.querySelectorAll('.nav-item').forEach(item => {
             if (item.getAttribute('href') === currentPage) {
                 item.classList.add('active');
             }
         });
+        fetchWeather();
     }
 }
-async function fetchWeather() {
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=17.38&longitude=78.48&current_weather=true');
-    const data = await res.json();
-    const weatherHTML = `
-        <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px; font-size: 0.8rem;">
-            ☁️ Hyderabad: ${data.current_weather.temperature}°C<br>
-            <span style="opacity: 0.7;">Clear sky - Ideal for harvest</span>
-        </div>`;
-    document.querySelector('.sidebar').insertAdjacentHTML('beforeend', weatherHTML);
-}
-fetchWeather();
 
 document.addEventListener('DOMContentLoaded', loadSidebar);

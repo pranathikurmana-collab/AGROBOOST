@@ -5,16 +5,18 @@
     <title>AgroBoost – Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app">
         <main class="main">
             <div class="topbar"><span class="page-title">Dashboard</span></div>
-             <div class="panel" style="display: flex; gap: 20px; margin-bottom: 30px;">
-               <div style="flex: 1; height: 300px;"><canvas id="cropChart"></canvas></div>
-                 <div style="flex: 1; height: 300px;"><canvas id="bonusChart"></canvas></div>
-            </div>
             <div class="content">
+                <div class="panel" style="display: flex; gap: 20px; margin-bottom: 30px; background: white; padding: 20px; border-radius: 16px;">
+                    <div style="flex: 1; height: 300px;"><canvas id="cropChart"></canvas></div>
+                    <div style="flex: 1; height: 300px;"><canvas id="bonusChart"></canvas></div>
+                </div>
+
                 <div class="stats">
                     <div class="stat-card green">
                         <div class="stat-label">Total Farmers</div>
@@ -29,7 +31,8 @@
                         <div class="stat-val" id="stat-revenue">₹0</div>
                     </div>
                 </div>
-                <div class="section-hdr"><h2>Recent records</h2></div>
+                
+                <div class="section-hdr"><h2>Recent Records</h2></div>
                 <div class="table-wrap">
                     <table>
                         <thead><tr><th>Farmer</th><th>Crop</th><th>Quantity</th><th>Bonus</th></tr></thead>
@@ -44,12 +47,15 @@
         async function loadDashboard() {
             const response = await fetch('http://127.0.0.1:8000/dashboard-stats');
             const stats = await response.json();
+            
             document.getElementById('stat-farmers').textContent = stats.total_farmers;
             document.getElementById('stat-qty').textContent = stats.total_qty.toLocaleString() + ' kg';
             document.getElementById('stat-revenue').textContent = '₹' + stats.total_revenue.toLocaleString();
             
             const recResponse = await fetch('http://127.0.0.1:8000/records');
             const productions = await recResponse.json();
+            
+            // 1. Render Table
             const tbody = document.getElementById('dash-table');
             tbody.innerHTML = productions.slice(0, 5).map(p => `
                 <tr>
@@ -58,20 +64,44 @@
                     <td>${p.quantity} kg</td>
                     <td><span class="bonus-chip">₹${p.bonus}</span></td>
                 </tr>`).join('');
+
+            // 2. Generate Doughnut Chart
+            const cropData = {};
+            productions.forEach(p => cropData[p.crop] = (cropData[p.crop] || 0) + p.quantity);
+
+            new Chart(document.getElementById('cropChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(cropData),
+                    datasets: [{ 
+                        data: Object.values(cropData), 
+                        backgroundColor: ['#386641', '#6a994e', '#bc4749', '#f2e8cf'] 
+                    }]
+                },
+                options: { 
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'Crop Distribution (kg)' } } 
+                }
+            });
+
+            // 3. Generate Bonus Bar Chart
+            new Chart(document.getElementById('bonusChart'), {
+                type: 'bar',
+                data: {
+                    labels: productions.slice(0, 5).map(p => p.farmer),
+                    datasets: [{
+                        label: 'Bonuses Earned',
+                        data: productions.slice(0, 5).map(p => p.bonus),
+                        backgroundColor: '#6a994e'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'Recent Bonuses (₹)' } }
+                }
+            });
         }
         loadDashboard();
-        // Inside loadDashboard after fetching productions
-const cropData = {};
-productions.forEach(p => cropData[p.crop] = (cropData[p.crop] || 0) + p.quantity);
-
-new Chart(document.getElementById('cropChart'), {
-    type: 'doughnut',
-    data: {
-        labels: Object.keys(cropData),
-        datasets: [{ data: Object.values(cropData), backgroundColor: ['#386641', '#6a994e', '#bc4749', '#f2e8cf'] }]
-    },
-    options: { plugins: { title: { display: true, text: 'Crop Distribution (kg)' } } }
-});
     </script>
 </body>
 </html>

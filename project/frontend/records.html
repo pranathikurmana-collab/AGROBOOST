@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <title>AgroBoost – Records</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="app">
         <main class="main">
             <div class="topbar">
-                <span class="page-title">Records</span>
+                <span class="page-title">Production Records</span>
                 <button class="clear-btn" id="clearBtn">Clear all</button>
-                
             </div>
             <div class="content">
                 <div class="table-wrap">
@@ -27,70 +27,58 @@
     </div>
     <script src="components.js"></script>
     <script>
-    async function renderTable() {
-    const res = await fetch('http://127.0.0.1:8000/records');
-    const data = await res.json();
-    const tbody = document.getElementById('records-table');
-    
-    tbody.innerHTML = data.map((p, i) => `
-        <tr>
-            <td style="color:#888780;font-size:.8rem">${i + 1}</td>
-            <td style="font-weight:500">${p.farmer}</td>
-            <td><span class="crop-pill">${p.crop}</span></td>
-            <td>${p.quantity.toLocaleString()} kg</td>
-            <td><span class="bonus-chip">₹${p.bonus.toLocaleString()}</span></td>
-            <td>
-                <button class="delete-row-btn" onclick="deleteEntry(${p.id})">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </td>
-        </tr>`).join('');
-}
+        async function renderTable() {
+            const res = await fetch('http://127.0.0.1:8000/records');
+            const data = await res.json();
+            const tbody = document.getElementById('records-table');
+            
+            tbody.innerHTML = data.map((p, i) => `
+                <tr>
+                    <td style="color:#888780;font-size:.8rem">${i + 1}</td>
+                    <td style="font-weight:500">${p.farmer}</td>
+                    <td><span class="crop-pill">${p.crop}</span></td>
+                    <td>${p.quantity.toLocaleString()} kg</td>
+                    <td><span class="bonus-chip">₹${p.bonus.toLocaleString()}</span></td>
+                    <td>
+                        <div style="display:flex; gap: 8px;">
+                            <button class="pdf-btn" onclick='downloadReceipt(${JSON.stringify(p)})' style="padding:5px 10px; cursor:pointer;">PDF</button>
+                            <button class="delete-row-btn" onclick="deleteEntry(${p.id})" style="cursor:pointer;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+        }
+
         async function deleteEntry(id) {
-            if(confirm('Delete?')) {
+            if(confirm('Delete this record?')) {
                 await fetch(`http://127.0.0.1:8000/records/${id}`, {method:'DELETE'});
                 renderTable();
             }
         }
-        function downloadReceipt(p) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.text("AgroBoost Official Receipt", 20, 20);
-    doc.text(`Farmer: ${p.farmer}`, 20, 40);
-    doc.text(`Crop: ${p.crop} (${p.quantity}kg)`, 20, 50);
-    doc.text(`Total Payout: ₹${p.market_value + p.bonus}`, 20, 60);
-    doc.save(`${p.farmer}_Receipt.pdf`);
-}
-        renderTable();
-        async function renderTable() {
-    const res = await fetch('http://127.0.0.1:8000/records');
-    const data = await res.json();
-    const tbody = document.getElementById('records-table');
-    
-    tbody.innerHTML = data.map((p, i) => `
-        <tr>
-            <td style="color:#888780;font-size:.8rem">${i + 1}</td>
-            <td style="font-weight:500">${p.farmer}</td>
-            <td><span class="crop-pill">${p.crop}</span></td>
-            <td>${p.quantity.toLocaleString()} kg</td>
-            <td><span class="bonus-chip">₹${p.bonus.toLocaleString()}</span></td>
-            <td>
-                <div style="display:flex; gap: 8px;">
-                    <button class="pdf-btn" onclick='downloadReceipt(${JSON.stringify(p)})'>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                        PDF
-                    </button>
 
-                    <button class="delete-row-btn" onclick="deleteEntry(${p.id})">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                </div>
-            </td>
-        </tr>`).join('');
-}
+        function downloadReceipt(p) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(20);
+            doc.text("AgroBoost Official Receipt", 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Farmer: ${p.farmer}`, 20, 40);
+            doc.text(`Crop: ${p.crop}`, 20, 50);
+            doc.text(`Quantity: ${p.quantity}kg`, 20, 60);
+            doc.text(`Bonus Awarded: ₹${p.bonus}`, 20, 70);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 80);
+            doc.save(`Receipt_${p.farmer}.pdf`);
+        }
+
+        document.getElementById('clearBtn').addEventListener('click', async () => {
+            if(confirm('Clear all?')) {
+                await fetch('http://127.0.0.1:8000/clear-records', {method:'DELETE'});
+                renderTable();
+            }
+        });
+
+        renderTable();
     </script>
 </body>
 </html>
