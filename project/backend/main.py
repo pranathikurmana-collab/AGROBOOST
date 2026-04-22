@@ -8,7 +8,7 @@ import requests
 
 # --- MySQL Connection Setup ---
 USER = "root"
-PASSWORD = ""  # Add your password if you have one
+PASSWORD = "" 
 HOST = "localhost"
 PORT = "3306"
 DB_NAME = "agroboost_db1"
@@ -87,6 +87,10 @@ def calculate_bonus(qty: int) -> int:
 
 # --- API Endpoints ---
 
+@app.get("/")
+def home():
+    return {"message": "AgroBoost API is running!"}
+
 @app.get("/dashboard-stats")
 def get_stats():
     db = SessionLocal()
@@ -101,11 +105,7 @@ def get_stats():
 def add_farmer(farmer: FarmerCreate):
     db = SessionLocal()
     try:
-        new_farmer = FarmerDB(
-            name=farmer.name, 
-            village=farmer.village, 
-            phone=farmer.phone
-        )
+        new_farmer = FarmerDB(name=farmer.name, village=farmer.village, phone=farmer.phone)
         db.add(new_farmer)
         db.commit()
         return {"status": "success"}
@@ -121,6 +121,11 @@ def get_records():
     records = db.query(ProductionDB).order_by(desc(ProductionDB.id)).all()
     db.close()
     return records
+
+@app.get("/get-price/{crop_name}")
+def fetch_price(crop_name: str):
+    price = get_market_price(crop_name)
+    return {"price": price}
 
 @app.post("/productions")
 def add_production(prod: ProductionCreate):
@@ -172,6 +177,16 @@ def delete_record(record_id: int):
         db.commit()
     db.close()
     return {"status": "success"}
+
+@app.delete("/clear-records")
+def clear_records():
+    db = SessionLocal()
+    try:
+        db.query(ProductionDB).delete()
+        db.commit()
+        return {"status": "cleared"}
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     import uvicorn
