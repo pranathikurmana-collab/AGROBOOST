@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AgroBoost – Customer Shop</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .product-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; transition: 0.3s; text-align: center; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .product-img { width: 100%; height: 150px; background: #f4f7f2; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+        .price-tag { color: #386641; font-weight: 700; font-size: 1.2rem; margin: 10px 0; }
+        .stock-label { font-size: 0.8rem; color: #888; margin-bottom: 15px; }
+        .buy-btn { width: 100%; padding: 12px; background: #6a994e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .buy-btn:hover { background: #386641; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <main class="main">
+            <div class="topbar"><span class="page-title">Fresh from the Farm</span></div>
+            <div class="content">
+                <div class="section-hdr"><h2>Available Produce</h2></div>
+                <div class="shop-grid" id="shop-grid">
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="components.js"></script>
+    <script>
+        async function loadShop() {
+            const res = await fetch('http://127.0.0.1:8000/records');
+            const data = await res.json();
+            const grid = document.getElementById('shop-grid');
+            
+            // Emoji map for visual appeal
+            const icons = { "Rice": "🌾", "Wheat": "🍞", "Onion": "🧅", "Tomato": "🍅", "Maize": "🌽" };
+
+            // Grouping quantities by crop
+            const inventory = {};
+            data.forEach(p => {
+                inventory[p.crop] = (inventory[p.crop] || 0) + p.quantity;
+            });
+
+            grid.innerHTML = Object.keys(inventory).map(crop => `
+                <div class="product-card">
+                    <div class="product-img">${icons[crop] || '🍃'}</div>
+                    <h3 style="margin:0">${crop}</h3>
+                    <div class="price-tag">₹${getMockPrice(crop)}/kg</div>
+                    <div class="stock-label">Available: ${inventory[crop]} kg</div>
+                    <button class="buy-btn" onclick="purchase('${crop}')">Buy Now</button>
+                </div>
+            `).join('');
+        }
+
+        function getMockPrice(crop) {
+            const prices = { "Rice": 55, "Wheat": 32, "Onion": 40, "Tomato": 30 };
+            return prices[crop] || 45;
+        }
+
+        function purchase(crop) {
+            alert(`Order Placed! Your fresh ${crop} will be delivered shortly.`);
+        }
+
+        loadShop();
+    </script>
+</body>
+</html>
