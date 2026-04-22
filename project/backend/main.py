@@ -96,6 +96,23 @@ def get_stats():
     total_revenue = sum((p.market_value or 0) + (p.bonus or 0) for p in productions)
     db.close()
     return {"total_farmers": total_farmers, "total_qty": total_qty, "total_revenue": total_revenue}
+@app.post("/farmers")
+def add_farmer(farmer: FarmerCreate):
+    db = SessionLocal()
+    try:
+        new_farmer = FarmerDB(
+            name=farmer.name, 
+            village=farmer.village, 
+            phone=farmer.phone
+        )
+        db.add(new_farmer)
+        db.commit()
+        return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
 
 @app.get("/records")
 def get_records():
