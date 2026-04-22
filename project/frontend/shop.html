@@ -31,40 +31,49 @@
     <script src="components.js"></script>
     <script>
         async function loadShop() {
-            const res = await fetch('http://127.0.0.1:8000/records');
-            const data = await res.json();
-            const grid = document.getElementById('shop-grid');
-            
-            // Emoji map for visual appeal
-            const icons = { "Rice": "🌾", "Wheat": "🍞", "Onion": "🧅", "Tomato": "🍅", "Maize": "🌽" };
+    const res = await fetch('http://127.0.0.1:8000/records');
+    const data = await res.json();
+    const grid = document.getElementById('shop-grid');
+    
+    const icons = { "Rice": "🌾", "Wheat": "🍞", "Onion": "🧅", "Tomato": "🍅", "Maize": "🌽" };
 
-            // Grouping quantities by crop
-            const inventory = {};
-            data.forEach(p => {
-                inventory[p.crop] = (inventory[p.crop] || 0) + p.quantity;
-            });
+    // This object will now store both total quantity AND the average market price
+    const inventory = {};
 
-            grid.innerHTML = Object.keys(inventory).map(crop => `
-                <div class="product-card">
-                    <div class="product-img">${icons[crop] || '🍃'}</div>
-                    <h3 style="margin:0">${crop}</h3>
-                    <div class="price-tag">₹${getMockPrice(crop)}/kg</div>
-                    <div class="stock-label">Available: ${inventory[crop]} kg</div>
-                    <button class="buy-btn" onclick="purchase('${crop}')">Buy Now</button>
+    data.forEach(p => {
+        if (!inventory[p.crop]) {
+            inventory[p.crop] = { totalQty: 0, buyPrice: 0 };
+        }
+        inventory[p.crop].totalQty += p.quantity;
+        // We take the latest market price from the database
+        inventory[p.crop].buyPrice = p.market_price; 
+    });
+
+    grid.innerHTML = Object.keys(inventory).map(crop => {
+        const buyPrice = inventory[crop].buyPrice;
+        // Adding a 15% margin for the platform
+        const sellPrice = (buyPrice * 1.15).toFixed(2); 
+
+        return `
+            <div class="product-card">
+                <div class="product-img">${icons[crop] || '🍃'}</div>
+                <h3 style="margin:0">${crop}</h3>
+                <div class="price-tag">₹${sellPrice}/kg</div>
+                <div style="font-size: 0.7rem; color: #aaa; margin-bottom: 5px;">
+                    (Farmer Price: ₹${buyPrice.toFixed(2)})
                 </div>
-            `).join('');
-        }
+                <div class="stock-label">Available: ${inventory[crop].totalQty} kg</div>
+                <button class="buy-btn" onclick="purchase('${crop}', ${sellPrice})">Buy Now</button>
+            </div>
+        `;
+    }).join('');
+}
 
-        function getMockPrice(crop) {
-            const prices = { "Rice": 55, "Wheat": 32, "Onion": 40, "Tomato": 30 };
-            return prices[crop] || 45;
-        }
+function purchase(crop, price) {
+    alert(`Order Placed for ${crop} at ₹${price}/kg!`);
+}
 
-        function purchase(crop) {
-            alert(`Order Placed! Your fresh ${crop} will be delivered shortly.`);
-        }
-
-        loadShop();
+loadShop();
     </script>
 </body>
 </html>
