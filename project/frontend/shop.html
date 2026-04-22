@@ -2,78 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AgroBoost – Customer Shop</title>
+    <title>AgroBoost – Marketplace</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <style>
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
-        .product-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; transition: 0.3s; text-align: center; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .product-img { width: 100%; height: 150px; background: #f4f7f2; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
-        .price-tag { color: #386641; font-weight: 700; font-size: 1.2rem; margin: 10px 0; }
-        .stock-label { font-size: 0.8rem; color: #888; margin-bottom: 15px; }
-        .buy-btn { width: 100%; padding: 12px; background: #6a994e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .buy-btn:hover { background: #386641; }
+        .product-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; text-align: center; }
+        .product-img { font-size: 3rem; margin-bottom: 10px; }
+        .price-tag { color: #386641; font-weight: 700; font-size: 1.2rem; }
+        .buy-btn { width: 100%; padding: 12px; background: #6a994e; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="app">
         <main class="main">
-            <div class="topbar"><span class="page-title">Fresh from the Farm</span></div>
+            <div class="topbar"><span class="page-title">Marketplace</span></div>
             <div class="content">
-                <div class="section-hdr"><h2>Available Produce</h2></div>
-                <div class="shop-grid" id="shop-grid">
-                    </div>
+                <div class="shop-grid" id="shop-grid"></div>
             </div>
         </main>
     </div>
-
     <script src="components.js"></script>
     <script>
         async function loadShop() {
-    const res = await fetch('http://127.0.0.1:8000/records');
-    const data = await res.json();
-    const grid = document.getElementById('shop-grid');
-    
-    const icons = { "Rice": "🌾", "Wheat": "🍞", "Onion": "🧅", "Tomato": "🍅", "Maize": "🌽" };
+            const res = await fetch('http://127.0.0.1:8000/records');
+            const data = await res.json();
+            const grid = document.getElementById('shop-grid');
+            const icons = { "Rice": "🌾", "Wheat": "🍞", "Onion": "🧅", "Tomato": "🍅", "Maize": "🌽" };
+            
+            const inventory = {};
+            data.forEach(p => {
+                if (p.quantity > 0) {
+                    if (!inventory[p.crop]) inventory[p.crop] = { totalQty: 0, buyPrice: p.market_price };
+                    inventory[p.crop].totalQty += p.quantity;
+                }
+            });
 
-    // This object will now store both total quantity AND the average market price
-    const inventory = {};
-
-    data.forEach(p => {
-        if (!inventory[p.crop]) {
-            inventory[p.crop] = { totalQty: 0, buyPrice: 0 };
+            grid.innerHTML = Object.keys(inventory).length > 0 ? 
+                Object.keys(inventory).map(crop => {
+                    const sellPrice = (inventory[crop].buyPrice * 1.15).toFixed(2);
+                    return `
+                        <div class="product-card">
+                            <div class="product-img">${icons[crop] || '🍃'}</div>
+                            <h3>${crop}</h3>
+                            <div class="price-tag">₹${sellPrice}/kg</div>
+                            <div style="font-size:0.7rem; color:#888">Farmer Rate: ₹${inventory[crop].buyPrice.toFixed(2)}</div>
+                            <div style="margin: 10px 0; font-weight: 500;">Stock: ${inventory[crop].totalQty} kg</div>
+                            <button class="buy-btn" onclick="purchase('${crop}')">Buy Now</button>
+                        </div>`;
+                }).join('') : "<p>No produce available at the moment.</p>";
         }
-        inventory[p.crop].totalQty += p.quantity;
-        // We take the latest market price from the database
-        inventory[p.crop].buyPrice = p.market_price; 
-    });
 
-    grid.innerHTML = Object.keys(inventory).map(crop => {
-        const buyPrice = inventory[crop].buyPrice;
-        // Adding a 15% margin for the platform
-        const sellPrice = (buyPrice * 1.15).toFixed(2); 
+        async function purchase(crop) {
+            const qty = prompt(`Enter quantity for ${crop} (kg):`, "10");
+            if (!qty) return;
+            
+            const response = await fetch(`http://127.0.0.1:8000/purchase?crop=${crop}&buy_qty=${qty}`, { method: 'POST' });
+            const result = await response.json();
 
-        return `
-            <div class="product-card">
-                <div class="product-img">${icons[crop] || '🍃'}</div>
-                <h3 style="margin:0">${crop}</h3>
-                <div class="price-tag">₹${sellPrice}/kg</div>
-                <div style="font-size: 0.7rem; color: #aaa; margin-bottom: 5px;">
-                    (Farmer Price: ₹${buyPrice.toFixed(2)})
-                </div>
-                <div class="stock-label">Available: ${inventory[crop].totalQty} kg</div>
-                <button class="buy-btn" onclick="purchase('${crop}', ${sellPrice})">Buy Now</button>
-            </div>
-        `;
-    }).join('');
-}
-
-function purchase(crop, price) {
-    alert(`Order Placed for ${crop} at ₹${price}/kg!`);
-}
-
-loadShop();
+            if (response.ok) {
+                alert(`Successfully purchased ${qty}kg of ${crop}!`);
+                loadShop(); 
+            } else {
+                alert(`Error: ${result.detail}`);
+            }
+        }
+        loadShop();
     </script>
 </body>
 </html>
