@@ -11,6 +11,7 @@
             <div class="topbar">
                 <span class="page-title">Records</span>
                 <button class="clear-btn" id="clearBtn">Clear all</button>
+                
             </div>
             <div class="content">
                 <div class="table-wrap">
@@ -54,6 +55,15 @@
                 renderTable();
             }
         }
+        function downloadReceipt(p) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("AgroBoost Official Receipt", 20, 20);
+    doc.text(`Farmer: ${p.farmer}`, 20, 40);
+    doc.text(`Crop: ${p.crop} (${p.quantity}kg)`, 20, 50);
+    doc.text(`Total Payout: ₹${p.market_value + p.bonus}`, 20, 60);
+    doc.save(`${p.farmer}_Receipt.pdf`);
+}
         renderTable();
     </script>
 </body>

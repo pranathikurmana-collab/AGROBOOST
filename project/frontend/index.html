@@ -10,6 +10,10 @@
     <div class="app">
         <main class="main">
             <div class="topbar"><span class="page-title">Dashboard</span></div>
+             <div class="panel" style="display: flex; gap: 20px; margin-bottom: 30px;">
+               <div style="flex: 1; height: 300px;"><canvas id="cropChart"></canvas></div>
+                 <div style="flex: 1; height: 300px;"><canvas id="bonusChart"></canvas></div>
+            </div>
             <div class="content">
                 <div class="stats">
                     <div class="stat-card green">
@@ -56,6 +60,18 @@
                 </tr>`).join('');
         }
         loadDashboard();
+        // Inside loadDashboard after fetching productions
+const cropData = {};
+productions.forEach(p => cropData[p.crop] = (cropData[p.crop] || 0) + p.quantity);
+
+new Chart(document.getElementById('cropChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(cropData),
+        datasets: [{ data: Object.values(cropData), backgroundColor: ['#386641', '#6a994e', '#bc4749', '#f2e8cf'] }]
+    },
+    options: { plugins: { title: { display: true, text: 'Crop Distribution (kg)' } } }
+});
     </script>
 </body>
 </html>

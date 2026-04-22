@@ -39,5 +39,16 @@ function loadSidebar() {
         });
     }
 }
+async function fetchWeather() {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=17.38&longitude=78.48&current_weather=true');
+    const data = await res.json();
+    const weatherHTML = `
+        <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px; font-size: 0.8rem;">
+            ☁️ Hyderabad: ${data.current_weather.temperature}°C<br>
+            <span style="opacity: 0.7;">Clear sky - Ideal for harvest</span>
+        </div>`;
+    document.querySelector('.sidebar').insertAdjacentHTML('beforeend', weatherHTML);
+}
+fetchWeather();
 
 document.addEventListener('DOMContentLoaded', loadSidebar);
