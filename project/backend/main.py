@@ -96,6 +96,7 @@ def get_stats():
     total_revenue = sum((p.market_value or 0) + (p.bonus or 0) for p in productions)
     db.close()
     return {"total_farmers": total_farmers, "total_qty": total_qty, "total_revenue": total_revenue}
+
 @app.post("/farmers")
 def add_farmer(farmer: FarmerCreate):
     db = SessionLocal()
