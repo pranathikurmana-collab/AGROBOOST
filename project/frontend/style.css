@@ -505,6 +505,25 @@ tr:hover td { background: #fafaf8; }
 }
 .submit-btn:hover { background: var(--green-900); }
 .submit-btn:active { transform: scale(.99); }
+.pdf-btn {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+
+.pdf-btn:hover {
+    background: #1976d2;
+    color: white;
+}
 
 .success-msg {
   display: none;
