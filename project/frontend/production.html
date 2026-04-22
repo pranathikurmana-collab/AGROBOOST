@@ -35,14 +35,22 @@
     </div>
     <script src="components.js"></script>
     <script>
-        document.getElementById('p-crop').addEventListener('blur', async function() {
-            const crop = this.value.trim();
-            if (crop.length > 2) {
-                const res = await fetch(`http://127.0.0.1:8000/get-price/${crop}`);
-                const data = await res.json();
-                document.getElementById('price-display').textContent = `Live Price: ₹${data.price}/kg`;
-            }
-        });
+    document.getElementById('p-crop').addEventListener('blur', async function() {
+    const crop = this.value.trim();
+    const display = document.getElementById('price-display');
+    
+    if (crop.length > 2) {
+        display.textContent = "Fetching...";
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/get-price/${crop}`);
+            const data = await response.json();
+            console.log("Price received:", data.price); // Look at this in F12 Inspect
+            display.textContent = `Live Price: ₹${data.price.toFixed(2)}/kg`;
+        } catch (error) {
+            display.textContent = "Error connecting to backend.";
+        }
+    }
+});
 
         document.getElementById('submitBtn').addEventListener('click', async () => {
             const farmer = document.getElementById('p-farmer').value;

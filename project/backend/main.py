@@ -8,26 +8,39 @@ import requests
 
 # --- GOVT API LOGIC ---
 def get_market_price(commodity: str):
-    API_KEY = "579b464db66ec23bdd00000115f7591d366241ce716b47198b87d19f" 
-    url = f"https://api.data.gov.in/resource/9ef542fd-9a8d-4d86-b006-7c376a053e43?api-key={API_KEY}&format=json&filters[state]=Telangana"
+    API_KEY = "579b464db66ec23bdd00000115f7591d366241ce716b47198b87d19f"
     
+    # Real-world estimated local prices (per kg)
+    local_market_prices = {
+        "maize": 22.50,
+        "paddy": 20.40,
+        "rice": 45.00,
+        "onion": 35.00,
+        "tomato": 25.00,
+        "wheat": 28.00,
+        "cotton": 75.00
+    }
+    
+    search_term = commodity.lower().strip()
+    
+    # Step 1: Try the Govt API
+    url = f"https://api.data.gov.in/resource/9ef542fd-9a8d-4d86-b006-7c376a053e43?api-key={API_KEY}&format=json&filters[state]=Telangana"
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=3)
         data = response.json()
         if data.get('records'):
-            search_term = commodity.lower().strip()
             for record in data['records']:
-                # IMPROVED LOGIC: Check if the search term is INSIDE the commodity name
-                # Example: "Onion" matches "Onion (Red)" or "Onion (Big)"
                 if search_term in record['commodity'].lower():
                     modal_price = float(record['modal_price'])
-                    print(f"Match found: {record['commodity']} at ₹{modal_price/100}/kg")
                     return modal_price / 100 
     except Exception as e:
-        print(f"Govt API Error: {e}")
+        print(f"API Timeout/Error: {e}")
+
+    # Step 2: If API fails/no match, use our Local Market List
+    if search_term in local_market_prices:
+        return local_market_prices[search_term]
     
-    # Randomize fallback slightly so it doesn't look like a "hardcoded" number in demos
-    # Or keep it at 40.0 if you prefer a steady baseline.
+    # Step 3: Absolute final fallback
     return 40.0
 
 # --- MySQL Connection Setup ---
