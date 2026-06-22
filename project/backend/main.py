@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, Float, create_engine, desc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import requests
+from database import engine, Base, get_db
 
 # --- MySQL Connection Setup ---
 USER = "root"
